@@ -35,24 +35,40 @@ type PositionElementProps = {
   readonly background?: string;
   readonly left?: number;
   readonly top?: number;
+  readonly isMoving?: boolean;
+  readonly id: string;
 } & React.HTMLAttributes<HTMLElement>;
 
-const PositionItem = styled.div<PositionElementProps>`
+const PositionItem = styled.div.attrs((props: PositionElementProps): any => ({
+  id: props.id || "",
+}))`
   background-color: ${(props) => props.background};
   left: ${(props) => (props.left ? `${props.left}px` : "0px")};
   top: ${(props) => (props.top ? `${props.top}px` : "0px")};
   height: 50px;
   width: 50px;
+  visibility: ${(props) => (props.isMoving ? "hidden" : "visible")};
+  border-color: #fff;
   position: absolute;
 `;
 
 function App() {
   const ref: React.RefObject<HTMLInputElement> = React.createRef();
-  const handleDragEnd = (e: any, item: any) => {
-    const foundItem = items.find((x) => x.id === item.id)!;
+
+  const handleDrag = (e: any) => {
+    const id = parseInt(e.nativeEvent.srcElement.id.replace("id_", ""));
+    const foundItem = items.find((x) => x.id === id)!;
+    foundItem.isMoving = true;
+    setItems([...items.filter((x) => x.id !== id), foundItem]);
+  };
+
+  const handleDragEnd = (e: any) => {
+    const id = parseInt(e.target.id.replace("id_", ""));
+    const foundItem = items.find((x) => x.id === id)!;
     foundItem.top = e.clientY - ref.current?.offsetTop!;
     foundItem.left = e.clientX - ref.current?.offsetLeft!;
-    setItems([...items.filter((x) => x.id !== item.id), foundItem]);
+    foundItem.isMoving = false;
+    setItems([...items.filter((x) => x.id !== id), foundItem]);
   };
 
   const [items, setItems] = useState([
@@ -61,25 +77,28 @@ function App() {
       left: 10,
       top: 10,
       color: "red",
+      isMoving: false,
     },
     {
       id: 2,
       left: 80,
       top: 250,
       color: "blue",
+      isMoving: false,
     },
     {
       id: 3,
       left: 160,
       top: 350,
       color: "green",
+      isMoving: false,
     },
   ]);
 
   return (
     <AppContainer>
       <Stage>
-        <OuterContainer ref={ref}>
+        <OuterContainer ref={ref} onDragEnd={handleDragEnd} onDrag={handleDrag}>
           <PositioningContainer>
             {items.map((item) => (
               <PositionItem
@@ -87,10 +106,9 @@ function App() {
                 left={item.left}
                 top={item.top}
                 background={item.color}
+                isMoving={item.isMoving}
                 draggable
-                onDragEnd={(event: any) => {
-                  handleDragEnd(event, item);
-                }}
+                id={`id_${item.id}`}
               />
             ))}
           </PositioningContainer>
