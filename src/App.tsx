@@ -1,5 +1,4 @@
-import React, { DragEventHandler, useEffect, useState } from "react";
-import "./App.css";
+import React, { useState } from "react";
 import styled from "styled-components";
 
 const Stage = styled.div`
